@@ -203,7 +203,7 @@ class TestExample:
 ```
 **Output:**
 
-![](D:\Learning\repo_GIT\Python_API_1\doc_cache\png\pytest_first_tests_les21.png)
+![](https://github.com/maraby777/Python_API_1/blob/main/doc_cache/png/pytest_first_tests_les21.png)
 
 </details>
 
