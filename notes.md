@@ -1,5 +1,6 @@
 ##API Course:
-### Parsing error
+
+<details><summary><b>Parsing error by JSONDecodeError</b></summary>
 
 ```python
 # If the response is not valid JSON format, catch the parsing error
@@ -15,8 +16,12 @@ try:
 except JSONDecodeError:
     print(f"Response is not a JSON format.\nRaw response text: {response.text}\nStatus code: {response.status_code}")
 ```
+
+</details>
+
 _______________________________
-### Sending different requests types (*17)
+
+<details><summary><b>Sending different requests types (*17)</b></summary>
 
 ```python
 import requests
@@ -36,8 +41,11 @@ print("DELETE: ", response_delete.text)
 response_put = requests.put(requested_URL, data={"param4":"PUT"})
 print("PUT: ", response_put.text)
 ```
+
+</details>
+
 ---
-## Status codes
+### Status codes (*18)
 https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status#informational_responses
 
 HTTP response status codes indicate whether a specific HTTP request has been successfully completed. 
@@ -49,6 +57,8 @@ HTTP response status codes indicate whether a specific HTTP request has been suc
 - Redirection messages (300 – 399)
 - Client error responses (400 – 499)
 - Server error responses (500 – 599)
+<details><summary>Code</summary>
+
 ```python
 import requests
 from pprint import pprint # pprint = pretty print for visualisation of dicts, lists, JSON's, etc.
@@ -71,8 +81,10 @@ print(response2.status_code)
 print(first_response.url)
 print(second_response.url)
 ```
+</details>
 
-## Headers (*19)
+---
+<details><summary><b>Headers (*19) is additional info send with request</b></summary>
 
 ```python
 import requests
@@ -88,8 +100,11 @@ response = requests.get("https://playground.learnqa.ru/api/show_all_headers", he
 print(response.text)  # response from server (response body)
 print(response.headers)  # meta data or dictionary with headers from server
 ```
+</details>
 
-## 🍪 Cookies (*20)
+---
+
+### 🍪 Cookies (*20)
 Coockies are small pices of data stored on client side (in browser).
  **Used to:**
 - remember user session (stayed logged in)
@@ -110,11 +125,13 @@ Test login/logout flow.
 - Ensure proper cleanup after logout (cookie deleted/expired).
 
 ###Type of cookies:
-**Session cookies** - temporary, deleted, when browser is closed
-**Persistent** - have expiration and survive browser close
-**HttpOnly** - cannot accessed by JavaScript (security)
-**Secure** - sent over HTTPS
-**SameSite** - control cross-site behavior (CORS-related)
+- **Session cookies** - temporary, deleted, when browser is closed
+- **Persistent** - have expiration and survive browser close
+- **HttpOnly** - cannot accessed by JavaScript (security)
+- **Secure** - sent over HTTPS
+- **SameSite** - control cross-site behavior (CORS-related)
+
+<details><summary>🍪 Cookies - code </summary>
 
 ```python
 import requests
@@ -149,8 +166,85 @@ response = requests.post("https://playground.learnqa.ru/api/get_auth_cookie", da
 print(response.text)            # print: {"error":"Wrong data"}
 print(response.status_code)     # Status code should be 200, the error with authorization is handled
 print(dict(response.cookies))   # print: {}
+```
+
+</details>
+
+---
+### First pytest tests (*21)
+In terminal: `python -m pytest test_examples.py -k "test_check_math"`
+where:
+ - `python -m  pytest` - runs pytest as python module, 
+ - `"test_examples.py"` - points to file with tests to run , 
+ - `-k "test_check_math"` - filters tests by name ( runt test which consists "test_check_math" in the name)
+
+To run exactly only one specific "test_check_math" and avoid substring matches, add `'$'` at the end: `-k "test_check_math$"`
+
+<details><summary>Code </summary>
+
+```python
+# Example for simple test run
+class TestExample:
+    # Valid test: this test should pass
+    def test_check_math(self):
+        a = 5
+        b = 9
+        expected_sum = 14
+        # Asserts that a+b equals the expect sum , with thw custom message on failure
+        assert a+b == expected_sum, f"Sum of variables a and b is not equal to {expected_sum}"
+
+    # Failing test: this test will expect to fail due to incorrect sum
+    def test_check_math2(self):
+        a = 5
+        b = 10
+        expected_sum = 14
+        # Test will fail and print the custom message
+        assert a+b == expected_sum, f"Sum of variables a and b is not equal to {expected_sum}"
+```
+**Output:**
+
+![](D:\Learning\repo_GIT\Python_API_1\doc_cache\png\pytest_first_tests_les21.png)
+
+</details>
+
+---
+
+<details><summary><b>First API test (*22)</b></summary>
+
+```python
+import requests
+# Test run in terminal: python -m pytest test_first_api.py
+class TestFirstAPI:
+    def test_hello_call(self):
+        url = "https://playground.learnqa.ru/api/hello"
+        name = 'Nat'
+        data = {'name':name}
+
+        # Send request and store response to variable
+        response = requests.get(url, params=data)
+
+        # Validate HTTP status code
+        assert response.status_code == 200, "Wrong response code"
+
+        # Parse response body as json()
+        response_dict = response.json()
+
+        # Verify if key 'answer' exists in JSON body
+        assert "answer" in response_dict, "There is no field answer' in the response"
+
+        #  Prepare expected response and extract actual one
+        expected_response_text = f"Hello, {name}"
+        actual_response_text = response_dict["answer"]
+
+        # Compare expected and actual text
+        assert actual_response_text == expected_response_text, "Actual text in the response is not correct"
 
 ```
+
+</details>
+
+---
+
 # Nagłówek 1
 ## Nagłówek 2
 - Lista punktowana
