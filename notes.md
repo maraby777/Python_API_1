@@ -180,7 +180,7 @@ where:
 
 To run exactly only one specific "test_check_math" and avoid substring matches, add `'$'` at the end: `-k "test_check_math$"`
 
-<details><summary>Code </summary>
+<details><summary><b>Code</b></summary>
 
 ```python
 # Example for simple test run
@@ -244,6 +244,270 @@ class TestFirstAPI:
 </details>
 
 ---
+####🔍 Parameterization in Pytest (*23)
+
+Parameterization in Pytests allows you to launch the same test function many times with different data sets (arguments). Thanks to this:
+- You do not have to copy the test code for various input data,
+- tests are more transparent and scalable,
+- It is easier to analyze which test cases have not passed.
+
+<details><summary><b> Code</b></summary>
+
+```python
+import pytest
+import requests
+
+# Test run in terminal: python -m pytest test_first_api.py
+# To run: python -m pytest test_first_api.py
+class TestFirstAPI:
+    # List of elements to verify the /hello endpoint
+    names = [
+        ("Vitaliy"),
+        ("Nat"),
+        ("")        # Empty name should return a generic greeting
+    ]
+
+    @pytest.mark.parametrize('name', names)
+    def test_hello_call(self, name):
+        url = "https://playground.learnqa.ru/api/hello"
+        params = {'name':name}  # Load data from tuples
+
+        # Send request and store response to variable
+        response = requests.get(url, params=params)
+
+        # Validate HTTP status code
+        assert response.status_code == 200, "Wrong response code"
+
+        # Parse response body as json()
+        response_dict = response.json()
+
+        # Verify if key 'answer' exists in JSON body
+        assert "answer" in response_dict, "There is no field answer' in the response"
+
+        if len(name) == 0:
+            expected_response_text = "Hello, someone"
+        else:
+            #  Prepare expected response and extract actual one
+            expected_response_text = f"Hello, {name}"
+
+        # After refactor:
+        # expected_respose_text = f"Hello, {name}" if name else  "Hello, someone"
+
+        actual_response_text = response_dict["answer"]
+        print(f"Response for name={name}': {actual_response_text}") # Contextual print for debugging
+
+        # Compare expected and actual text
+        assert actual_response_text == expected_response_text, "Actual text in the response is not correct"
+```
+</details>
+
+---
+
+<details><summary><b>Auth tests (*24&*25)</b></summary>
+
+```python
+import requests
+import pytest
+
+class TestUserAuth:
+    def test_user_auth(self):
+        params = {
+            'email':'vinkotov@example.com',
+            'password':'1234'
+        }
+
+        # Send POST to log in
+        response1 = requests.post("https://playground.learnqa.ru/api/user/login", data=params)
+
+        #Validate values in respose
+        assert "auth_sid" in response1.cookies, "There is no auth cookie in the response"
+        assert "x-csrf-token" in response1.headers, "Tere is no CSRF token header in the response"
+        assert "user_id" in response1.json(), "There is no user id in the response body"
+
+        # Just debug :)
+        print(response1.json())
+
+        # Extract values for authorization
+        auth_sid = response1.cookies.get("auth_sid")
+        token = response1.headers.get("x-csrf-token")
+        user_id_from_auth_method = response1.json()["user_id"]
+
+        # Send GET to check user authorization
+        response2 = requests.get(
+            "https://playground.learnqa.ru/api/user/auth",
+            headers={"x-csrf-token":token},
+            cookies={"auth_sid":auth_sid}
+        )
+
+        # Validate user_id in response
+        assert "user_id" in response2.json(), "There is no user is in the response2 body"
+
+        # Compare expected and actual user_id
+        user_id_from_check_method = response2.json()["user_id"]
+        print(f"Response2 {response2.json()}")
+
+        assert user_id_from_auth_method == user_id_from_check_method, "User id from auth method is not equal to user id from check method"
+
+##  Parameterized negative test: missing cookie or token
+    exclude_params = [
+        ("no_cookie"),
+        ("no_token")
+    ]
+
+    @pytest.mark.parametrize('condition', exclude_params)
+    def test_negative_auth_check(self, condition):
+
+        # Prepare login credentials
+        params = {
+            'email': 'vinkotov@example.com',
+            'password': '1234'
+        }
+
+        # Send POST to log in
+        response1 = requests.post("https://playground.learnqa.ru/api/user/login", data=params)
+
+        # Validate data in response
+        assert "auth_sid" in response1.cookies, "There is no auth cookie in the response"
+        assert "x-csrf-token" in response1.headers, "Tere is no CSRF token header in the response"
+        assert "user_id" in response1.json(), "There is no user id in the response body"
+
+        # Debug info
+        print(response1.json())
+
+        # Extract value for authorization
+        auth_sid = response1.cookies.get("auth_sid")
+        token = response1.headers.get("x-csrf-token")
+
+        # Choose what to exclude based on the test condition
+        response2 = requests.get(
+            "https://playground.learnqa.ru/api/user/auth",
+            headers={"x-csrf-token":token}
+        ) if condition == "no_cookies" else requests.get(
+            "https://playground.learnqa.ru/api/user/auth",
+            cookies={"auth_sid":auth_sid}
+        )
+
+        # Longer version
+        # if condition == 'no_cookie':
+        #     response2 = requests.get(
+        #         "https://playground.learnqa.ru/api/user/auth",
+        #         headers={"x-csrf-token":token}
+        #     )
+        # else:     # no_token
+        #     response2 = requests.get(
+        #         "https://playground.learnqa.ru/api/user/auth",
+        #         cookies={"auth_sid":auth_sid}
+        #     )
+
+
+        # Validate that user is not authorized
+        assert "user_id" in response1.json(), "There is no user id in the response2 body"
+        user_id_from_check_method = response2.json()["user_id"]
+
+        # Debug outprint
+        print(f"Response2 _negative:  {response2.json()}")
+
+        assert user_id_from_check_method == 0, f"User is authorized with condition {condition}"
+
+```
+
+</details>
+
+---
+
+#### Setup_method(self, method) – classic “xUnit style” approach
+This is a special method that is automatically executed before EVERY test method in the class.
+
+🔧 **Usage:**
+- You have to name it exactly setup_method(self, method) – pytest requires it.
+- You can use teardown_method(self, method) if you want to clean up something after the test.
+
+<details><summary><b>Code</b></summary>
+
+```python
+import requests
+import pytest
+
+## For run test use in terminal: python -m pytest test_user_auth.py -s
+
+class TestUserAuth:
+    ##  Parameterized negative test: missing cookie or token
+    exclude_params = ["no_cookie", "no_token"]
+
+    def setup_method(self, method):
+        # Credential data
+        params = {
+            'email':'vinkotov@example.com',
+            'password':'1234'
+        }
+
+        # Send POST to log in
+        response1 = requests.post("https://playground.learnqa.ru/api/user/login", data=params)
+
+        #Validate values in respose
+        assert "auth_sid" in response1.cookies, "There is no auth cookie in the response"
+        assert "x-csrf-token" in response1.headers, "There is no CSRF token header in the response"
+        assert "user_id" in response1.json(), "There is no user id in the response body"
+
+        # Extract values for reuse in tests
+        self.auth_sid = response1.cookies.get("auth_sid")
+        self.token = response1.headers.get("x-csrf-token")
+        self.user_id_from_auth_method = response1.json()["user_id"]
+
+
+    def test_user_auth(self):
+        # Send GET to check user authorization
+        response2 = requests.get(
+            "https://playground.learnqa.ru/api/user/auth",
+            headers={"x-csrf-token":self.token},
+            cookies={"auth_sid":self.auth_sid}
+        )
+
+        # Validate user_id in response
+        assert "user_id" in response2.json(), "There is no user is in the response2 body"
+
+        # Compare expected and actual user_id
+        user_id_from_check_method = response2.json()["user_id"]
+        print(f"Response2 {response2.json()}")
+
+        assert self.user_id_from_auth_method == user_id_from_check_method, "User id from auth method is not equal to user id from check method"
+
+    @pytest.mark.parametrize('condition', exclude_params)
+    def test_negative_auth_check(self, condition):
+
+        # Choose what to exclude based on the test condition
+        response = requests.get(
+            "https://playground.learnqa.ru/api/user/auth",
+            headers={"x-csrf-token":self.token}
+        ) if condition == "no_cookies" else requests.get(
+            "https://playground.learnqa.ru/api/user/auth",
+            cookies={"auth_sid":self.auth_sid}
+        )
+
+        # Longer version
+        # if condition == 'no_cookie':
+        #     response2 = requests.get(
+        #         "https://playground.learnqa.ru/api/user/auth",
+        #         headers={"x-csrf-token":self.token}
+        #     )
+        # else:     # no_token
+        #     response2 = requests.get(
+        #         "https://playground.learnqa.ru/api/user/auth",
+        #         cookies={"auth_sid":self.auth_sid}
+        #     )
+
+
+        # Validate that user is not authorized
+        assert "user_id" in response.json(), "There is no user id in the response2 body"
+        user_id_from_check_method = response.json()["user_id"]
+
+        # Debug outprint
+        print(f"Response _negative test:  {response.json()}")
+
+        assert user_id_from_check_method == 0, f"User is authorized with condition {condition}"
+
+```
+
 
 # Nagłówek 1
 ## Nagłówek 2
@@ -254,3 +518,8 @@ class TestFirstAPI:
 
 ```python 
 def hello(): print("Hello, world!") ``` 
+
+
+<details><summary><b>BlaBlaBla</b></summary>
+
+</details>
