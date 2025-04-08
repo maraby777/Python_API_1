@@ -180,7 +180,7 @@ where:
 
 To run exactly only one specific "test_check_math" and avoid substring matches, add `'$'` at the end: `-k "test_check_math$"`
 
-<details><summary><b>Code</b></summary>
+<details><summary>Code </summary>
 
 ```python
 # Example for simple test run
@@ -203,7 +203,7 @@ class TestExample:
 ```
 **Output:**
 
-![](D:\Learning\repo_GIT\Python_API_1\doc_cache\png\pytest_first_tests_les21.png)
+![](https://github.com/maraby777/Python_API_1/blob/main/doc_cache/png/pytest_first_tests_les21.png)
 
 </details>
 
@@ -518,8 +518,3 @@ class TestUserAuth:
 
 ```python 
 def hello(): print("Hello, world!") ``` 
-
-
-<details><summary><b>BlaBlaBla</b></summary>
-
-</details>
