@@ -1,9 +1,10 @@
 import requests
 import pytest
+from lib.base_case import BaseCase
 
 ## For run test use in terminal: python -m pytest test_user_auth.py -s
 
-class TestUserAuth:
+class TestUserAuth(BaseCase):
     ##  Parameterized negative test: missing cookie or token
     exclude_params = ["no_cookie", "no_token"]
 
@@ -17,16 +18,10 @@ class TestUserAuth:
         # Send POST to log in
         response1 = requests.post("https://playground.learnqa.ru/api/user/login", data=params)
 
-        #Validate values in respose
-        assert "auth_sid" in response1.cookies, "There is no auth cookie in the response"
-        assert "x-csrf-token" in response1.headers, "There is no CSRF token header in the response"
-        assert "user_id" in response1.json(), "There is no user id in the response body"
-
-        # Extract values for reuse in tests
-        self.auth_sid = response1.cookies.get("auth_sid")
-        self.token = response1.headers.get("x-csrf-token")
-        self.user_id_from_auth_method = response1.json()["user_id"]
-
+        # Get from BaseCase auth_id and token
+        self.auth_sid = self.get_cookie(response1, "auth_sid")
+        self.token = self.get_header(response1, "x-csrf-token")
+        self.user_id_from_auth_method = self.get_json_value(response1, 'user_id')
 
     def test_user_auth(self):
         # Send GET to check user authorization
