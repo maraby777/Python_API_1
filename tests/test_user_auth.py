@@ -37,7 +37,7 @@ class TestUserAuth(BaseCase):
         )
 
         # Validate user_id in response
-        Assertions.asser_json_value_by_name(
+        Assertions.assert_json_value_by_name(
             response2,
             "user_id",
             self.user_id_from_auth_method,
@@ -56,7 +56,7 @@ class TestUserAuth(BaseCase):
         )
 
         # Validate the user is NOT authorized
-        Assertions.asser_json_value_by_name(
+        Assertions.assert_json_value_by_name(
             response,
             "user_id",
             0,
