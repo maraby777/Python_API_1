@@ -2,27 +2,15 @@ import requests
 from lib.base_case import BaseCase
 from lib.assertions import Assertions
 from datetime import datetime
+from lib.my_requests import MyRequests
 
 class TestUserRegister(BaseCase):
-     def setup_method(self):
-          # Generate a unique email address using timestamp
-          base_part = 'learnqa'
-          domain = 'example.com'
-          random_part = datetime.now().strftime("%m%d%Y%H%M%S")
-          self.email = f"{base_part}{random_part}@{domain}"
 
      def test_careate_new_user_successfully(self):
+          params = self.prepare_registration_data()
 
-          params = {
-               'password':'123',
-               'username': 'learnqa',
-               'firstName': 'learnqa',
-               'lastName': 'learnqa',
-               'email': self.email
-          }
           # Send POST request to register user
-
-          response = requests.post("https://playground.learnqa.ru/api/user/", data=params)
+          response = MyRequests.post("/user/", data=params)
 
           # Assert correct status code and content
           Assertions.assert_code_status(response, 200)
@@ -31,16 +19,10 @@ class TestUserRegister(BaseCase):
      def test_create_user_with_existing_mail(self):
           # Try to register with email that already exists
           email = 'vinkotov@example.com'
-          params = {
-               'password':'123',
-               'username': 'learnqa',
-               'firstName': 'learnqa',
-               'lastName': 'learnqa',
-               'email': email
-          }
+          params = self.prepare_registration_data(email)
 
           #Send POST request to register user
-          response = requests.post("https://playground.learnqa.ru/api/user/", data=params)
+          response = MyRequests.post("/user/", data=params)
 
           # Assert correct status code and content
           Assertions.assert_code_status(response, 400)
